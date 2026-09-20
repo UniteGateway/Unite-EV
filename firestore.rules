@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Catch-All Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Security Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'uniterealbricks@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Stations: Public read for drivers and station seekers; writes restricted to Admin
+    match /stations/{stationId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(stationId);
+    }
+
+    // Applications: Turnkey station applications
+    match /applications/{applicationId} {
+      allow create: if isValidId(applicationId) &&
+        incoming().applicantName is string && incoming().applicantName.size() <= 150 &&
+        incoming().mobile is string && incoming().mobile.size() <= 20 &&
+        incoming().email is string && incoming().email.size() <= 150 &&
+        incoming().entityType in ['individual', 'partnership', 'pvt_ltd', 'proprietorship', 'trust'] &&
+        incoming().investmentTier in ['starter', 'highway_hub', 'ultra_depot', 'custom'] &&
+        incoming().currentStage is string && incoming().currentStage.size() <= 64;
+
+      allow read: if true;
+
+      allow update: if isValidId(applicationId) && (
+        isAdmin() ||
+        (isSignedIn() && existing().email == request.auth.token.email)
+      );
+
+      allow delete: if isAdmin() && isValidId(applicationId);
+    }
+
+    // Charging Sessions: Active and completed EV charging sessions
+    match /chargingSessions/{sessionId} {
+      allow read: if true;
+      allow create: if isValidId(sessionId) &&
+        incoming().stationId is string && incoming().stationId.size() <= 128 &&
+        incoming().status in ['in_progress', 'completed', 'cancelled'];
+      allow update: if isValidId(sessionId) &&
+        incoming().status in ['in_progress', 'completed', 'cancelled'];
+      allow delete: if isAdmin() && isValidId(sessionId);
+    }
+
+    // Invoices: GST Charging Receipts
+    match /invoices/{invoiceId} {
+      allow read: if true;
+      allow create: if isValidId(invoiceId) &&
+        incoming().sessionId is string && incoming().sessionId.size() <= 128 &&
+        incoming().paymentStatus in ['paid', 'pending', 'failed'];
+      allow update: if isAdmin() && isValidId(invoiceId);
+      allow delete: if isAdmin() && isValidId(invoiceId);
+    }
+
+    // User Wallets
+    match /userWallets/{walletId} {
+      allow read: if true;
+      allow create, update: if isValidId(walletId) &&
+        incoming().balance is number && incoming().balance >= 0;
+      allow delete: if isAdmin() && isValidId(walletId);
+    }
+  }
+}

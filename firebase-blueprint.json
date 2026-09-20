@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Application": {
+      "title": "StationApplication",
+      "description": "Turnkey EV station application submitted by a site owner or franchise entrepreneur",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "applicantName": { "type": "string", "maxLength": 150 },
+        "mobile": { "type": "string", "maxLength": 20 },
+        "email": { "type": "string", "maxLength": 150 },
+        "entityType": { "type": "string", "enum": ["individual", "partnership", "pvt_ltd", "proprietorship", "trust"] },
+        "investmentTier": { "type": "string", "enum": ["starter", "highway_hub", "ultra_depot", "custom"] },
+        "financingRequired": { "type": "boolean" },
+        "siteCategory": { "type": "string", "enum": ["highway", "mall", "hotel", "restaurant", "fleet", "urban", "commercial"] },
+        "currentStage": { "type": "string", "maxLength": 64 },
+        "completedStages": { "type": "array" },
+        "status": { "type": "string", "enum": ["submitted", "reviewing", "approved", "rejected", "operational"] },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "applicantName", "mobile", "email", "entityType", "investmentTier", "currentStage", "status"]
+    },
+    "EVStation": {
+      "title": "EVStation",
+      "description": "Operational EV charging station in the Unite Powertek network",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "operator": { "type": "string", "maxLength": 150 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["highway", "mall", "hotel", "restaurant", "fleet", "urban", "commercial"] },
+        "is24x7": { "type": "boolean" },
+        "totalChargers": { "type": "number" },
+        "availableChargers": { "type": "number" },
+        "tariffPerKwh": { "type": "number" }
+      },
+      "required": ["id", "name", "city", "category", "totalChargers", "tariffPerKwh"]
+    },
+    "ChargingSession": {
+      "title": "ChargingSession",
+      "description": "Active or completed EV vehicle charging session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "stationId": { "type": "string", "maxLength": 128 },
+        "stationName": { "type": "string", "maxLength": 200 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "vehicleModel": { "type": "string", "maxLength": 100 },
+        "vehicleNumber": { "type": "string", "maxLength": 30 },
+        "startSoc": { "type": "number" },
+        "currentSoc": { "type": "number" },
+        "targetSoc": { "type": "number" },
+        "energyDeliveredKwh": { "type": "number" },
+        "chargingRateKw": { "type": "number" },
+        "estimatedCost": { "type": "number" },
+        "status": { "type": "string", "enum": ["in_progress", "completed", "cancelled"] }
+      },
+      "required": ["id", "stationId", "stationName", "status"]
+    },
+    "ChargingInvoice": {
+      "title": "ChargingInvoice",
+      "description": "Tax invoice and billing record for charging sessions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "stationName": { "type": "string", "maxLength": 200 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "date": { "type": "string", "maxLength": 64 },
+        "energyKwh": { "type": "number" },
+        "amount": { "type": "number" },
+        "gstAmount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentMode": { "type": "string", "maxLength": 50 },
+        "paymentStatus": { "type": "string", "enum": ["paid", "pending", "failed"] }
+      },
+      "required": ["id", "sessionId", "totalAmount", "paymentStatus"]
+    },
+    "UserWallet": {
+      "title": "UserWallet",
+      "description": "Digital prepaid EV wallet record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "balance": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "balance", "currency"]
+    }
+  },
+  "firestore": {
+    "/applications/{applicationId}": {
+      "schema": "#/entities/Application",
+      "description": "Turnkey station project proposals and tracking records"
+    },
+    "/stations/{stationId}": {
+      "schema": "#/entities/EVStation",
+      "description": "Operational charging stations network and telemetry"
+    },
+    "/chargingSessions/{sessionId}": {
+      "schema": "#/entities/ChargingSession",
+      "description": "Live and completed vehicle charging sessions"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "#/entities/ChargingInvoice",
+      "description": "Statutory GST charging receipts and ledger invoices"
+    },
+    "/userWallets/{walletId}": {
+      "schema": "#/entities/UserWallet",
+      "description": "Prepaid wallet balances and top-up records"
+    }
+  }
+}

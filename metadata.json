@@ -1,0 +1,7 @@
+{
+  "name": "Unitev - Unite Powertek EV Charging Network",
+  "description": "India's premier turnkey EV charging station infrastructure and charging network platform. Apply, We Build, You Earn.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
